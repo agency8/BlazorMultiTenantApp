@@ -1,0 +1,109 @@
+﻿@page "/Admin/Tenants"
+
+<h3>Tenant Manager</h3>
+
+@if (TenantService.TenantList == null)
+{
+    <span>No tenants found! / Loading...</span>
+}
+else
+{
+
+    if (isEditing)
+    {
+        <EditForm Model="tenant" OnSubmit="HandleSaveTenant">
+            <DataAnnotationsValidator />
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="tenantname">Tenant name</label>
+                    <InputText id="tenantname" @bind-Value="tenant.TenantName" class="form-control"></InputText>
+                    <ValidationMessage For="@(() => tenant.TenantName)" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <label for="tenanttype">Tenant Type</label>
+                    <InputSelect 
+                    @bind-Value="tenant.TenantType" 
+                    @oninput="TypeChanged" 
+                    class="form-select">
+                        @foreach (var types in Enum.GetValues(typeof(TenantTypes)))
+                        {
+                            <option value="@types">@types</option> 
+                        }                       
+                    </InputSelect>
+                </div>
+            </div>
+            @if (DbStringVisible)
+            {
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="tenantdbstring">Database connection string</label>
+                        <InputText id="tenantdbstring" @bind-Value="tenant.DBConnectionString" class="form-control"></InputText>
+                    </div>
+                </div>
+            }
+            
+
+            <div class="row">
+                <div class="col-6 text-start">
+                    <button class="btn btn-light btn-sm" @onclick="CancelEditing">
+                        <span class="oi oi-action-undo"></span> Cancel
+                    </button>
+                </div>
+                <div class="col-6 text-end">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <span class="oi oi-cloud-upload"></span> Save tenant
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    } else
+    {
+        <table class="table table-striped table-hover table-densed">
+            <thead class="table-secondary">
+                <tr>
+                    <th scope="col">Tenant Id</th>
+                    <th scope="col">Tenant name</th>
+                    <th scope="col">Type</th>    
+                    <th scope="col"></th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var tenant in TenantService.TenantList.OrderBy(x => x.TenantName))
+                {
+                    <tr class="@(tenant.TenantName.ToLower() == "master" ? "table-info" : "")">
+                        <td>@tenant.Id</td>
+                        <td>@tenant.TenantName</td>
+                        <td>@tenant.TenantType</td>
+                        <td>
+                             <button class="btn btn-link btn-sm" 
+                                @onclick="(() => EditTenant(tenant))" 
+                                disabled="@(tenant.TenantName.ToLower() == "master" ? true : false)">
+                                <span class="oi oi-pencil"></span>
+                            </button>
+                        </td>
+                        <td>
+                            <button class="btn btn-link btn-sm" 
+                            @onclick="(() => DeleteTenant(tenant.Id))" 
+                            disabled="@(tenant.TenantName.ToLower() == "master" ? true : false)">
+                                <span class="oi oi-trash"></span>
+                            </button>
+                        </td>
+                    </tr>
+                }               
+            </tbody>
+            <tfoot class="table-secondary">
+                <tr>
+                    <td colspan="5" class="text-end">
+                        <button class="btn btn-primary btn-sm" @onclick="CreateNewTenant">
+                            <span class="oi oi-plus"></span> Add New Tenant
+                        </button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    }
+
+}
